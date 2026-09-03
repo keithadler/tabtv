@@ -103,5 +103,5 @@ at any time from the extension's settings page or by uninstalling the extension.
 | Asset | Size | File |
 | --- | --- | --- |
 | Icon | 128×128 | `icons/icon128.png` |
-| Screenshots | 1280×800 | `store/shot-1-guide.png`, `store/shot-2-find.png`, `store/shot-3-settings.png` |
+| Screenshots | 1280×800 | `store/shot-1-guide.png`, `store/shot-2-find.png`, `store/shot-3-settings.png`, `store/shot-4-pip.png`, `store/shot-5-help.png` |
 | Small promo tile | 440×280 | `store/promo-440x280.png` |

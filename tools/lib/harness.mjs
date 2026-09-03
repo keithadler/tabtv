@@ -49,7 +49,7 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
   const server = http.createServer((req, res) => {
     const body = pages[req.url];
     if (!body) { res.writeHead(404); res.end(); return; }
-    res.setHeader('content-type', 'text/html');
+    res.setHeader('content-type', 'text/html; charset=utf-8');
     res.end(body);
   }).listen(port);
   const firstUrl = firstUrlOverride || (Object.keys(pages)[0] ? `http://localhost:${port}${Object.keys(pages)[0]}` : 'about:blank');

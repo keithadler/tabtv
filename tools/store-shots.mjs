@@ -26,16 +26,20 @@ const pages = {
   '/docs.html': site('Widget API Docs', '#2a9d8f', '#f2fbf9', `<h1 style="font-size:32px">Getting started</h1>${para(3)}<pre style="background:#1e2a2a;color:#9fe;padding:22px;border-radius:12px;font-size:16px">const guide = new Guide({ channels: 43 });\nguide.on('select', switchTo);</pre>${para(4, 80)}`),
   '/shop.html': site('Northwind Outfitters', '#6a4c93', '#f9f6fd', `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">${['#c9ada7', '#9a8c98', '#4a4e69', '#f2e9e4', '#22223b', '#c9ada7'].map((c) => `<div style="height:190px;background:${c};border-radius:14px"></div>`).join('')}</div>`),
   '/mail.html': site('Inbox', '#d62828', '#ffffff', Array.from({ length: 9 }, (_, i) => `<div style="display:flex;gap:20px;padding:14px 0;border-bottom:1px solid #eee"><div style="width:140px;height:14px;background:#888;border-radius:7px"></div><div style="flex:1;height:14px;background:#ccc;border-radius:7px;width:${60 + (i * 13) % 35}%"></div></div>`).join('')),
-  '/video.html': site('StreamBox', '#111', '#181818', `<div style="height:420px;background:linear-gradient(135deg,#333,#000);border-radius:16px;display:flex;align-items:center;justify-content:center"><div style="width:0;height:0;border-left:70px solid #fff;border-top:40px solid transparent;border-bottom:40px solid transparent"></div></div>`),
+  '/video.html': site('StreamBox', '#111', '#181818', `<canvas id="c" width="640" height="360" hidden></canvas><video id="v" autoplay playsinline style="width:100%;height:420px;background:#000;border-radius:16px;object-fit:cover"></video>
+<script>const c=document.getElementById('c'),g=c.getContext('2d');let f=0;(function d(){g.fillStyle='hsl('+((f++*2)%360)+' 60% 35%)';g.fillRect(0,0,640,360);g.fillStyle='#fff';g.font='bold 70px Helvetica';g.fillText('LIVE',240,200);requestAnimationFrame(d)})();
+const v=document.getElementById('v');v.srcObject=c.captureStream(30);v.play().catch(()=>{});
+const ac=new AudioContext();const o=ac.createOscillator();const gn=ac.createGain();gn.gain.value=0.02;o.frequency.value=220;o.connect(gn).connect(ac.destination);o.start();</script>`),
   '/maps.html': site('Trail Finder', '#386641', '#e9f5db', `${hero('linear-gradient(135deg,#a7c957,#6a994e 60%,#386641)')}${para(3)}`),
   '/wiki.html': site('Encyclopedia', '#555', '#fff', `<h1 style="font-size:34px;border-bottom:1px solid #ccc">WebTV</h1>${para(8, 100)}`),
 };
 
 const PORT = 8781;
 const at = (p) => `http://${HOSTS[p]}:${PORT}${p}`;
-const h = await launch({ pages, port: PORT, name: 'store', extraArgs: [`--host-resolver-rules=MAP *.news 127.0.0.1, MAP *.co 127.0.0.1, MAP *.io 127.0.0.1, MAP *.com 127.0.0.1, MAP *.tv 127.0.0.1, MAP *.net 127.0.0.1, MAP *.org 127.0.0.1`], firstUrl: at('/news.html') });
+const h = await launch({ pages, port: PORT, name: 'store', extraArgs: ['--autoplay-policy=no-user-gesture-required', `--host-resolver-rules=MAP *.news 127.0.0.1, MAP *.co 127.0.0.1, MAP *.io 127.0.0.1, MAP *.com 127.0.0.1, MAP *.tv 127.0.0.1, MAP *.net 127.0.0.1, MAP *.org 127.0.0.1`], firstUrl: at('/news.html') });
 try {
   const { evalSW } = h;
+  await evalSW(`chrome.storage.local.set({ settings: { readText: true } })`);
   const all0 = await h.tabs();
   const winA = all0[0].windowId;
   const ids = [all0[0].id];
@@ -55,10 +59,23 @@ try {
   const save = async (name, sess) => { const r = await h.b.send('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1280, height: 800, scale: 1 } }, sess); writeFileSync(path.join(OUT, name), Buffer.from(r.data, 'base64')); h.log('wrote', name); };
   await save('shot-1-guide.png', g.sessionId);
 
-  await g.type('kitchen');
+  await g.type('polenta');
   await sleep(400);
   await save('shot-2-find.png', g.sessionId);
   await g.key('Escape');
+
+  // shot 4: the live tab with ON AIR and PIP, and the toast you get after Shift+P
+  const liveIdx = await g.evalP(`[...document.querySelectorAll('.card')].findIndex(c => c.querySelector('.title').textContent === 'StreamBox')`);
+  await g.evalP(`select(${liveIdx}, false); toast('PICTURE-IN-PICTURE ON', 60000); 1`);
+  await sleep(400);
+  await save('shot-4-pip.png', g.sessionId);
+  await g.evalP(`document.querySelector('#toast').hidden = true; select(2, false); 1`);
+
+  // shot 5: the help card
+  await g.evalP(`toggleHelp(); 1`);
+  await sleep(300);
+  await save('shot-5-help.png', g.sessionId);
+  await g.evalP(`toggleHelp(); 1`);
 
   // promo tile: crop of the guide at 440x280
   const tile = await h.b.send('Page.captureScreenshot', { format: 'png', clip: { x: 20, y: 90, width: 880, height: 560, scale: 0.5 } }, g.sessionId);
