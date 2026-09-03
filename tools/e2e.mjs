@@ -277,5 +277,6 @@ clearTimeout(watchdog);
 clearInterval(beat);
 chrome.kill('SIGKILL');
 server.close();
-rmSync(path.join(S, 'profile'), { recursive: true, force: true });
+// best-effort: Chrome may still be writing to the profile as it dies
+try { rmSync(path.join(S, 'profile'), { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch {}
 process.exit(failed ? 1 : 0);
