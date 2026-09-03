@@ -1,0 +1,3 @@
+Free, open source Chrome extension: TabTV turns your tabs into a TV channel guide. Big screenshots of every tab, arrow keys, Enter. Type 1 2 and you are on tab 12. Safe: nothing uploads, no account, the code is public. Get it: github.com/keithadler/tabtv
+
+#chrome #opensource #techtok
