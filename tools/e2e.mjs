@@ -1,7 +1,7 @@
 // End-to-end test of TabTV in a real Chrome via the DevTools protocol. No deps.
 // Usage: node tools/e2e.mjs   (needs Google Chrome; runs headless with a throwaway profile)
 import { spawn } from 'node:child_process';
-import { writeFileSync, mkdirSync, rmSync, mkdtempSync } from 'node:fs';
+import { writeFileSync, mkdirSync, rmSync, mkdtempSync, writeSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import os from 'node:os';
@@ -27,11 +27,17 @@ const server = http.createServer((req, res) => {
   res.end(body);
 }).listen(PORT);
 
+// Linux CI runners: no sandbox user namespaces, tiny /dev/shm, no GPU.
+const linuxFlags = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
 const chrome = spawn(CHROME, [
+  ...linuxFlags,
   '--headless=new', '--remote-debugging-pipe', '--enable-unsafe-extension-debugging',
   `--user-data-dir=${S}/profile`, '--no-first-run', '--no-default-browser-check', '--window-size=1280,800',
   `http://localhost:${PORT}/p1.html`,
-], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
+let chromeErr = '';
+chrome.stderr.on('data', (d) => { chromeErr += d.toString(); if (chromeErr.length > 8000) chromeErr = chromeErr.slice(-8000); });
+chrome.on('exit', (code, sig) => { if (code) chromeErr += `\n[chrome exited code=${code} signal=${sig}]`; });
 
 // CDP over the debugging pipe: fd 3 is Chrome's stdin for commands, fd 4 its stdout, NUL-separated JSON
 class Conn {
@@ -50,16 +56,35 @@ class Conn {
     });
     this.ready = Promise.resolve();
   }
-  send(method, params = {}, sessionId) { const id = ++this.id; this.out.write(JSON.stringify({ id, method, params, sessionId }) + '\0'); return new Promise((res, rej) => this.waits.set(id, { res, rej })); }
+  // Every call is bounded: a browser that never answers must fail the suite, not hang it.
+  send(method, params = {}, sessionId, timeoutMs = 20000) {
+    const id = ++this.id;
+    this.out.write(JSON.stringify({ id, method, params, sessionId }) + '\0');
+    return new Promise((res, rej) => {
+      this.waits.set(id, { res, rej });
+      const timer = setTimeout(() => { if (this.waits.has(id)) { this.waits.delete(id); rej(new Error(`CDP timeout: ${method} ${JSON.stringify(params).slice(0, 120)}`)); } }, timeoutMs);
+      timer.unref?.();
+    });
+  }
 }
 const b = new Conn(chrome);
-await sleep(1500);
+// Synchronous writes: they survive a kill, unlike buffered stdout on a pipe.
+const log = (...a) => { try { writeSync(2, '[e2e] ' + a.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ') + '\n'); } catch { console.log('[e2e]', ...a); } };
+let ready = false;
+let lastErr = '';
+for (let i = 0; i < 20 && !ready; i++) {
+  try { await b.send('Browser.getVersion', {}, undefined, 2000); ready = true; }
+  catch (e) { lastErr = e.message; await sleep(500); }
+}
+if (!ready) { log(`Chrome did not answer over the debugging pipe (${lastErr}). Chrome said:\n${chromeErr || '(nothing on stderr)'}`); chrome.kill('SIGKILL'); server.close(); process.exit(1); }
 const loaded = await b.send('Extensions.loadUnpacked', { path: EXT });
-console.log('[e2e] loaded extension', loaded.id);
-
-const log = (...a) => console.log('[e2e]', ...a);
+log('loaded extension', loaded.id);
 const results = [];
-const check = (name, ok, extra = '') => { results.push([name, ok]); log(ok ? 'PASS' : 'FAIL', name, extra); };
+let lastCheck = '(startup)';
+const check = (name, ok, extra = '') => { results.push([name, ok]); lastCheck = name; log(ok ? 'PASS' : 'FAIL', name, extra); };
+const beat = setInterval(() => log('...', lastCheck), 30000);
+beat.unref?.();
+const watchdog = setTimeout(() => { log(`WATCHDOG: no progress for 240s. Last check: ${lastCheck}`); try { chrome.kill('SIGKILL'); server.close(); } catch {} process.exit(1); }, 240000);
 
 // find the extension's service worker
 let sw;
@@ -248,6 +273,8 @@ writeFileSync(`${S}/shots/options.png`, Buffer.from(optShot.data, 'base64'));
 const failed = results.filter(([, ok]) => !ok).length;
 log(`${results.length - failed}/${results.length} checks passed`);
 log(`screenshots in ${S}/shots`);
+clearTimeout(watchdog);
+clearInterval(beat);
 chrome.kill('SIGKILL');
 server.close();
 rmSync(path.join(S, 'profile'), { recursive: true, force: true });
