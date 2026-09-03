@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TabTV settings</title>
+<link rel="stylesheet" href="overview.css">
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+<header class="bar top">
+  <div class="logo">Tab<span>TV</span></div>
+  <div class="heading">SETTINGS</div>
+  <div class="spacer"></div>
+  <div id="stats" class="count"></div>
+</header>
+<main class="panel">
+  <section>
+    <h2>NEVER TAKE PICTURES OF THESE SITES</h2>
+    <p>One hostname per line. Subdomains match too, so <b>bank.com</b> covers <b>online.bank.com</b>.
+       Tabs on these sites show a snow screen in the guide. Private (incognito) tabs are never photographed.</p>
+    <textarea id="never" rows="8" spellcheck="false" placeholder="bank.com&#10;mail.google.com"></textarea>
+    <div class="row"><button id="save" type="button">SAVE</button><span id="saved" class="ok"></span></div>
+  </section>
+  <section>
+    <h2>SEARCH WHAT WAS ON SCREEN</h2>
+    <p>Off by default. When on, TabTV also notes the words visible on the page each time it takes a picture,
+       so typing in the guide can find a tab by what you saw there, not only its title. The words are stored
+       next to the picture, on this computer, and go away with it. Sites on the never-list are skipped, and
+       turning this off forgets every word already noted.</p>
+    <label class="row"><input id="readtext" type="checkbox"> <span>Note the words on screen when taking a picture</span></label>
+  </section>
+  <section>
+    <h2>PICTURES</h2>
+    <p>Pictures live only in this browser profile and are deleted seven days after a tab closes,
+       or right away if you press this.</p>
+    <div class="row"><button id="clear" type="button" class="danger">CLEAR ALL PICTURES</button><span id="cleared" class="ok"></span></div>
+  </section>
+  <section id="dev" hidden>
+    <h2>UNPACKED INSTALL</h2>
+    <p>This copy was loaded from a folder, so it can watch <b>manifest.json</b> for a new version number and reload itself
+       within 30 seconds. It never reloads while the guide is open, and a version that adds permissions still needs the
+       reload arrow in <b>chrome://extensions</b> so you can approve them.</p>
+    <label class="row"><input id="autoreload" type="checkbox"> <span>Reload automatically when a new version is on disk</span></label>
+  </section>
+  <section>
+    <h2>SHORTCUT</h2>
+    <p id="shortcut-text">The guide opens with the shortcut set on Chrome's shortcuts page.</p>
+    <div class="row"><button id="shortcuts" type="button">OPEN SHORTCUTS PAGE</button></div>
+  </section>
+</main>
+<script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "tabtv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A WebTV-style channel guide for your Chrome tabs.",
+  "license": "MIT",
+  "scripts": {
+    "test": "tools/test.sh",
+    "pack": "tools/pack.sh",
+    "bump": "tools/bump.sh",
+    "store-shots": "node tools/store-shots.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keithadler/tabtv.git"
+  }
+}

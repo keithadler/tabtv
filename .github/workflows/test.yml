@@ -1,0 +1,21 @@
+name: test
+on:
+  push:
+  pull_request:
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Google Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+        id: chrome
+      - name: Run the suites
+        env:
+          CHROME: ${{ steps.chrome.outputs.chrome-path }}
+        run: tools/test.sh

@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "TabTV",
+  "version": "1.0.0",
+  "description": "A WebTV-style channel guide for your tabs. Big picture previews, arrow keys, Enter. Punch in a channel number to jump.",
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "favicon",
+    "sessions",
+    "idle",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "TabTV guide (Cmd+Shift+Space)",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "commands": {
+    "open-overview": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Space",
+        "mac": "Command+Shift+Space"
+      },
+      "description": "Open the TabTV guide"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "homepage_url": "https://github.com/keithadler/tabtv"
+}

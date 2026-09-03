@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TabTV</title>
+<link rel="stylesheet" href="overview.css">
+</head>
+<body>
+<div id="stage">
+  <header class="bar top">
+    <div class="logo">Tab<span>TV</span></div>
+    <div class="heading">TAB GUIDE</div>
+    <div class="spacer"></div>
+    <div id="status"></div>
+    <div id="count" class="count" aria-live="polite"></div>
+    <button id="order" type="button" title="Tab order or most recently used first">ORDER: TABS</button>
+    <span class="zoom"><button id="zoom-out" type="button" title="Smaller cards">−</button><button id="zoom-in" type="button" title="Bigger cards">+</button></span>
+    <button id="scan" type="button" title="Visit every tab in this window once so each one gets a picture">SCAN</button>
+    <button id="sound" type="button" title="Remote beeps on or off">SOUND</button>
+    <button id="help-btn" type="button" title="All the keys (?)">?</button>
+  </header>
+  <div id="update" hidden><span id="update-text"></span><button id="reload" type="button">RELOAD</button></div>
+  <main id="screen" tabindex="0" aria-label="Tab guide"></main>
+</div>
+<div id="crt"></div>
+<div id="cursor" hidden></div>
+<div id="osd"></div>
+<div id="search" hidden>FIND: <span id="search-text"></span><span class="caret"></span></div>
+<div id="toast" hidden role="status" aria-live="polite"></div>
+<div id="help" hidden role="dialog" aria-label="Keys">
+  <div class="help-card">
+    <h2>REMOTE CONTROL</h2>
+    <p id="help-shortcut">Open the guide from any page with Cmd+Shift+Space.</p>
+    <dl>
+      <dt><kbd>◀</kbd><kbd>▶</kbd><kbd>▲</kbd><kbd>▼</kbd></dt><dd>Move the cursor</dd>
+      <dt><kbd>ENTER</kbd></dt><dd>Switch to that tab</dd>
+      <dt><kbd>⇧</kbd><kbd>ENTER</kbd></dt><dd>Bring a tab from another window here</dd>
+      <dt><kbd>ESC</kbd> <kbd>⌫</kbd></dt><dd>Back to where you were</dd>
+      <dt><kbd>0-9</kbd></dt><dd>Channel number, pause, jump</dd>
+      <dt><kbd>A-Z</kbd></dt><dd>Find by title or address</dd>
+      <dt><kbd>DEL</kbd></dt><dd>Close that tab</dd>
+      <dt><kbd>⇧</kbd><kbd>DEL</kbd></dt><dd>Close every tab shown (press twice)</dd>
+      <dt><kbd>⇧</kbd><kbd>P</kbd></dt><dd>Pop that tab's video into a floating Picture-in-Picture window, then go back to your work. One video at a time; press again on another tab to swap, or on the same tab to stop. Cards marked ON AIR have a PIP button too.</dd>
+      <dt><kbd>⌘Z</kbd></dt><dd>Reopen what you just closed</dd>
+      <dt><kbd>TAB</kbd> <kbd>⇧</kbd><kbd>TAB</kbd></dt><dd>Next / previous window</dd>
+      <dt><kbd>PGUP</kbd> <kbd>PGDN</kbd> <kbd>HOME</kbd> <kbd>END</kbd></dt><dd>Fast travel</dd>
+      <dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Bigger or smaller cards</dd>
+      <dt><kbd>?</kbd></dt><dd>This card</dd>
+    </dl>
+  </div>
+</div>
+<footer class="bar bottom">
+  <span><kbd>◀</kbd><kbd>▶</kbd><kbd>▲</kbd><kbd>▼</kbd> MOVE</span>
+  <span><kbd>ENTER</kbd> GO</span>
+  <span class="only-other"><kbd>⇧</kbd><kbd>ENTER</kbd> BRING HERE</span>
+  <span><kbd>TAB</kbd> NEXT WINDOW</span>
+  <span><kbd>ESC</kbd> BACK</span>
+  <span><kbd>⇧</kbd><kbd>P</kbd> PIP</span>
+  <span><kbd>DEL</kbd> CLOSE TAB</span>
+  <span class="only-filter"><kbd>⇧</kbd><kbd>DEL</kbd> CLOSE ALL SHOWN</span>
+  <span><kbd>0-9</kbd> CHANNEL</span>
+  <span><kbd>A-Z</kbd> FIND</span>
+</footer>
+<script src="overview.js"></script>
+</body>
+</html>
