@@ -53,12 +53,19 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
     res.end(body);
   }).listen(port);
   const firstUrl = firstUrlOverride || (Object.keys(pages)[0] ? `http://localhost:${port}${Object.keys(pages)[0]}` : 'about:blank');
+  // Linux CI runners: no sandbox user namespaces, tiny /dev/shm, no GPU.
+  const linuxFlags = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
   const chrome = spawn(CHROME, [
+    ...linuxFlags,
     '--headless=new', '--remote-debugging-pipe', '--enable-unsafe-extension-debugging',
     `--user-data-dir=${S}/profile`, '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', ...extraArgs, firstUrl,
   ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
   const b = new Conn(chrome);
-  await sleep(1500);
+  // wait for the browser to answer before loading the extension, instead of a fixed pause
+  let ready = false;
+  for (let i = 0; i < 40 && !ready; i++) { try { await b.send('Browser.getVersion'); ready = true; } catch { await sleep(250); } }
+  if (!ready) throw new Error('Chrome did not answer over the debugging pipe');
+  await sleep(300);
   const { id: extId } = await b.send('Extensions.loadUnpacked', { path: extPath });
 
   const results = [];
