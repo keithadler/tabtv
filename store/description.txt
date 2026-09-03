@@ -1,0 +1,36 @@
+Remember flipping through channels with a remote? TabTV does that for your browser tabs.
+
+Press Cmd+Shift+Space (Ctrl+Shift+Space on Windows and Linux) and the whole window turns
+into a grid of big screenshots, one per tab, with a glowing cursor you steer with the arrow
+keys. Press Enter to switch. Press Escape to go back. Type a few letters to find a tab.
+Punch in a channel number to jump straight to it, just like a TV.
+
+WHAT YOU GET
+- Real screenshots of every tab you have looked at, not just titles and favicons
+- Arrow-key cursor with a proper remote-control feel, plus optional beeps
+- Channel numbers: type 1 2, pause, and you are on tab 12
+- Type-to-find across titles and URLs
+- Delete closes a tab, Cmd+Z brings it back
+- Shift+P pops a tab's video into Picture-in-Picture and takes you back to your work
+- Tab groups show their color and name; tabs open twice get a ×2 badge
+- ORDER button cycles tab-strip order, most-recent first, and grouped by site
+- Optional: search what was on screen, so "the tab with the pricing table" is one word away
+- Four card sizes, from five-across to two-across
+- Multiple windows appear as separate sections; Enter focuses the right window
+- Tab count on the toolbar icon
+
+HOW PICTURES ARE TAKEN
+Chrome only lets an extension photograph the tab in front of you, so TabTV takes a picture
+each time a tab comes forward or finishes loading, and refreshes the front tab every thirty
+seconds. Tabs you have not visited since installing show a snow screen until you do, or
+press SCAN to visit each one once. Private (incognito) tabs are never photographed, and you
+can list sites that must never be photographed in the settings.
+
+PRIVACY
+Everything stays in your browser profile. Page text is never read unless you turn on
+"search what was on screen" in settings, and then only the words visible when a picture is
+taken, stored beside it and deleted when you turn the switch off. No accounts, no servers, no analytics. Pictures of
+closed tabs are kept for seven days so undo and session restore can reuse them, then deleted.
+A button in settings deletes all of them at once.
+
+Open source under the MIT license.

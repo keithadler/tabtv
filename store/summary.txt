@@ -1,0 +1,1 @@
+A WebTV-style channel guide for your tabs. Big picture previews, arrow keys, Enter. Punch in a channel number to jump.
