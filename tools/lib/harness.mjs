@@ -1,6 +1,7 @@
 // TabTV. Copyright 2026 Keith Adler. SPDX-License-Identifier: MIT
 // Shared test harness: headless Google Chrome + the extension over the DevTools pipe. No deps.
 import { spawn } from 'node:child_process';
+import { writeSync } from 'node:fs';
 import { writeFileSync, mkdirSync, rmSync, mkdtempSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -51,8 +52,10 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
   const watchdogMs = Number(process.env.SUITE_WATCHDOG_MS || 240000);
   let chromeProc = null;
   let httpServer = null;
+  const beat = setInterval(() => { try { writeSync(2, `[${name}] ... ${lastCheck}\n`); } catch {} }, 30000);
+  beat.unref?.();
   const watchdog = setTimeout(() => {
-    console.log(`[${name}] WATCHDOG: no progress for ${Math.round(watchdogMs / 1000)}s. Last check: ${lastCheck}`);
+    try { writeSync(2, `[${name}] WATCHDOG: no progress for ${Math.round(watchdogMs / 1000)}s. Last check: ${lastCheck}\n`); } catch {}
     try { chromeProc?.kill('SIGKILL'); httpServer?.close(); } catch {}
     process.exit(1);
   }, watchdogMs);
@@ -89,7 +92,7 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
   const { id: extId } = await b.send('Extensions.loadUnpacked', { path: extPath });
 
   const results = [];
-  const log = (...a) => console.log(`[${name}]`, ...a);
+  const log = (...a) => { try { writeSync(2, `[${name}] ${a.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' ')}\n`); } catch { console.log(`[${name}]`, ...a); } };
   const check = (label, ok, extra = '') => { results.push([label, !!ok]); lastCheck = label; log(ok ? 'PASS' : 'FAIL', label, extra); return !!ok; };
   // If a suite wedges (a browser call that never returns), say where and leave.
 
@@ -160,6 +163,7 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
 
   const finish = () => {
     clearTimeout(watchdog);
+    clearInterval(beat);
     const failed = results.filter(([, ok]) => !ok).length;
     log(`${results.length - failed}/${results.length} checks passed`);
     log(`screenshots in ${S}/shots`);
