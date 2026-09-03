@@ -70,7 +70,16 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
 
   const results = [];
   const log = (...a) => console.log(`[${name}]`, ...a);
-  const check = (label, ok, extra = '') => { results.push([label, !!ok]); log(ok ? 'PASS' : 'FAIL', label, extra); return !!ok; };
+  let lastCheck = '(none yet)';
+  const check = (label, ok, extra = '') => { results.push([label, !!ok]); lastCheck = label; log(ok ? 'PASS' : 'FAIL', label, extra); return !!ok; };
+  // If a suite wedges (a browser call that never returns), say where and leave.
+  const watchdogMs = Number(process.env.SUITE_WATCHDOG_MS || 300000);
+  const watchdog = setTimeout(() => {
+    log(`WATCHDOG: no progress for ${Math.round(watchdogMs / 1000)}s. Last check: ${lastCheck}`);
+    try { chrome.kill('SIGKILL'); server.close(); } catch {}
+    process.exit(1);
+  }, watchdogMs);
+  watchdog.unref?.();
 
   let swSess;
   const attachSW = async (notTargetId) => {
@@ -137,6 +146,7 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
   const guideState = (p) => p.evalP(`({ cards: document.querySelectorAll('.card').length, imgs: document.querySelectorAll('.frame > img').length, nosignal: document.querySelectorAll('.nosignal').length, count: document.querySelector('#count').textContent, selected: document.querySelector('.card.selected .title')?.textContent || null, groups: [...document.querySelectorAll('.group h2')].map(h => h.textContent), titles: [...document.querySelectorAll('.card .title')].map(e => e.textContent) })`);
 
   const finish = () => {
+    clearTimeout(watchdog);
     const failed = results.filter(([, ok]) => !ok).length;
     log(`${results.length - failed}/${results.length} checks passed`);
     log(`screenshots in ${S}/shots`);
