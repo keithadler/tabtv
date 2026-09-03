@@ -142,7 +142,8 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
     log(`screenshots in ${S}/shots`);
     chrome.kill('SIGKILL');
     server.close();
-    rmSync(path.join(S, 'profile'), { recursive: true, force: true });
+    // best-effort cleanup of a temp profile Chrome may still be writing to as it dies
+    try { rmSync(path.join(S, 'profile'), { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch {}
     return failed;
   };
 
