@@ -1,0 +1,48 @@
+SINGLE PURPOSE
+Switch between open tabs using a full-screen grid of screenshot previews.
+
+PERMISSION JUSTIFICATIONS
+
+tabs
+Read tab titles, URLs, and favicons to build the guide, and switch, close, pin, and restore tabs when the user asks.
+
+tabGroups
+Show each tab's group color and name on its card.
+
+storage
+Keep screenshots and the user's settings locally.
+
+unlimitedStorage
+Screenshots of a few hundred tabs exceed the default 10 MB storage quota.
+
+alarms
+Refresh the front tab's picture every thirty seconds and expire pictures of closed tabs.
+
+favicon
+Show a large cached favicon on cards that have no screenshot yet.
+
+sessions
+Reopen a tab the user just closed from the guide (Cmd+Z).
+
+idle
+Skip the periodic picture refresh while the screen is locked.
+
+scripting
+Two one-shot injections on explicit user action, no persistent content scripts: toggle Picture-in-Picture on a tab's video when the user presses Shift+P or the PIP button; and, only if the user turns on "search what was on screen" in settings (off by default), read the text visible in the viewport when a picture is taken so the guide can search it.
+
+Host permission (<all_urls>)
+chrome.tabs.captureVisibleTab requires host access to photograph the page in front of the user. The extension never reads page content unless the user opts in, injects no persistent scripts, and makes no network requests.
+
+REMOTE CODE
+No, I am not using remote code.
+
+DATA USAGE
+Tick nothing in the list of data types. TabTV collects none of them. Screenshots and settings stay in the local browser profile and are never transmitted.
+
+CERTIFICATIONS (tick all three)
+- I do not sell or transfer user data to third parties, outside of the approved use cases
+- I do not use or transfer user data for purposes that are unrelated to my item's single purpose
+- I do not use or transfer user data to determine creditworthiness or for lending purposes
+
+PRIVACY POLICY URL
+https://github.com/keithadler/tabtv/blob/main/PRIVACY.md
