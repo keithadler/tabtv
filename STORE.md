@@ -32,7 +32,8 @@ WHAT YOU GET
 - Delete closes a tab, Cmd+Z brings it back
 - Shift+P pops a tab's video into Picture-in-Picture and takes you back to your work
 - Tab groups show their color and name; tabs open twice get a ×2 badge
-- ORDER button flips between tab-strip order and most-recent first
+- ORDER button cycles tab-strip order, most-recent first, and grouped by site
+- Optional: search what was on screen, so "the tab with the pricing table" is one word away
 - Four card sizes, from five-across to two-across
 - Multiple windows appear as separate sections; Enter focuses the right window
 - Tab count on the toolbar icon
