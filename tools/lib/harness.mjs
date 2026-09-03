@@ -46,12 +46,24 @@ const KEYS = { ArrowLeft: 37, ArrowRight: 39, ArrowUp: 38, ArrowDown: 40, Enter:
 export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs = [], firstUrl: firstUrlOverride, extPath = EXT } = {}) {
   const S = mkdtempSync(path.join(os.tmpdir(), `tabtv-${name}-`));
   mkdirSync(path.join(S, 'shots'));
+  // Armed before anything can block, so a hang in startup is reported rather than silent.
+  let lastCheck = '(startup)';
+  const watchdogMs = Number(process.env.SUITE_WATCHDOG_MS || 240000);
+  let chromeProc = null;
+  let httpServer = null;
+  const watchdog = setTimeout(() => {
+    console.log(`[${name}] WATCHDOG: no progress for ${Math.round(watchdogMs / 1000)}s. Last check: ${lastCheck}`);
+    try { chromeProc?.kill('SIGKILL'); httpServer?.close(); } catch {}
+    process.exit(1);
+  }, watchdogMs);
+
   const server = http.createServer((req, res) => {
     const body = pages[req.url];
     if (!body) { res.writeHead(404); res.end(); return; }
     res.setHeader('content-type', 'text/html; charset=utf-8');
     res.end(body);
   }).listen(port);
+  httpServer = server;
   const firstUrl = firstUrlOverride || (Object.keys(pages)[0] ? `http://localhost:${port}${Object.keys(pages)[0]}` : 'about:blank');
   // Linux CI runners: no sandbox user namespaces, tiny /dev/shm, no GPU.
   const linuxFlags = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] : [];
@@ -59,27 +71,28 @@ export async function launch({ pages = {}, port = 8777, name = 'e2e', extraArgs 
     ...linuxFlags,
     '--headless=new', '--remote-debugging-pipe', '--enable-unsafe-extension-debugging',
     `--user-data-dir=${S}/profile`, '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', ...extraArgs, firstUrl,
-  ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+  ], { stdio: ['ignore', 'ignore', 'pipe', 'pipe', 'pipe'] });
+  chromeProc = chrome;
+  let chromeErr = '';
+  chrome.stderr.on('data', (d) => { chromeErr += d.toString(); if (chromeErr.length > 8000) chromeErr = chromeErr.slice(-8000); });
+  chrome.on('exit', (code, sig) => { if (code) chromeErr += `\n[chrome exited code=${code} signal=${sig}]`; });
   const b = new Conn(chrome);
   // wait for the browser to answer before loading the extension, instead of a fixed pause
   let ready = false;
-  for (let i = 0; i < 40 && !ready; i++) { try { await b.send('Browser.getVersion'); ready = true; } catch { await sleep(250); } }
-  if (!ready) throw new Error('Chrome did not answer over the debugging pipe');
+  let lastErr = '';
+  for (let i = 0; i < 20 && !ready; i++) {
+    try { await b.send('Browser.getVersion', {}, undefined, 2000); ready = true; }
+    catch (e) { lastErr = e.message; await sleep(500); }
+  }
+  if (!ready) throw new Error(`Chrome did not answer over the debugging pipe after 20 tries (${lastErr}).\nChrome said:\n${chromeErr || '(nothing on stderr)'}`);
   await sleep(300);
   const { id: extId } = await b.send('Extensions.loadUnpacked', { path: extPath });
 
   const results = [];
   const log = (...a) => console.log(`[${name}]`, ...a);
-  let lastCheck = '(none yet)';
   const check = (label, ok, extra = '') => { results.push([label, !!ok]); lastCheck = label; log(ok ? 'PASS' : 'FAIL', label, extra); return !!ok; };
   // If a suite wedges (a browser call that never returns), say where and leave.
-  const watchdogMs = Number(process.env.SUITE_WATCHDOG_MS || 300000);
-  const watchdog = setTimeout(() => {
-    log(`WATCHDOG: no progress for ${Math.round(watchdogMs / 1000)}s. Last check: ${lastCheck}`);
-    try { chrome.kill('SIGKILL'); server.close(); } catch {}
-    process.exit(1);
-  }, watchdogMs);
-  watchdog.unref?.();
+
 
   let swSess;
   const attachSW = async (notTargetId) => {
